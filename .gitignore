@@ -1,0 +1,18 @@
+# Données CSV brutes
+data/*.csv
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Docker volumes / données locales
+docker/producer-energy/data/
