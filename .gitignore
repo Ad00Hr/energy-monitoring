@@ -16,3 +16,5 @@ env/
 
 # Docker volumes / données locales
 docker/producer-energy/data/
+# Ignore CSV dataset
+docker/producer-energy/data/*.csv
