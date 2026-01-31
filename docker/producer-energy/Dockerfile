@@ -7,9 +7,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le code et les données
+# Copier le code (On ne copie PAS le dossier data ici)
 COPY producer.py .
-COPY data/ ./data/
+# COPY data/ ./data/  <-- LIGNE SUPPRIMÉE OU COMMENTÉE
 
 # Commande par défaut
 CMD ["python", "producer.py"]

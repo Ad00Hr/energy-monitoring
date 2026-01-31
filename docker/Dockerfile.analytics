@@ -1,0 +1,18 @@
+FROM python:3.9-slim
+
+# Outils système
+RUN apt-get update && apt-get install -y libpq-dev gcc
+
+WORKDIR /app
+
+# Librairies
+RUN pip install pandas kafka-python psycopg2-binary pyarrow fastparquet schedule sqlalchemy
+
+# Copie des scripts (AVEC LE BON NOM)
+COPY bridge_consumer.py .
+COPY transform_silver.py .
+COPY create_gold.py .
+COPY orchestrateur.py .
+
+# On lance l'orchestrateur
+CMD ["python", "orchestrateur.py"]

@@ -61,28 +61,54 @@ docker compose down
 ```
 
 
-# Architecture de Stockage & Lakehouse (Guide pour Membre 3)
-## Cette section détaille l'infrastructure mise en place pour la persistance et la transformation des données.
+Architecture de Stockage & Data Lakehouse (Membre 3)
+Cette section détaille l'infrastructure mise en place pour la persistance, le nettoyage et la transformation des données énergétiques.
 
-## 1. Couches du Data Lakehouse (Médaillon)
-Bilal doit utiliser les répertoires suivants pour ses scripts de transformation (Spark/dbt) :
-
-Bronze (/lakehouse/bronze) : Contient les données brutes extraites de Kafka au format JSON. C'est la source de vérité immuable.
-
-Silver (/lakehouse/silver) : Contient les données nettoyées et typées au format Parquet. Les doublons sont supprimés et les timestamps sont formatés.
-
-Gold (/lakehouse/gold) : Contient les agrégations métier (ex: daily_energy_stats.parquet). C'est la source directe pour les dashboards du Membre 4.
-
-## 2. Base de Données Temps Réel (TimescaleDB)
-Pour les besoins de monitoring instantané, une base de données TimescaleDB (PostgreSQL 15) est disponible.
-
-Connexion : host: localhost, port: 5432, user: admin, password: password123.
-
-Table principale : energy_data (Hypertable partitionnée par le temps sur la colonne time).
-
-## 3. Pipeline d'Automatisation
-Un orchestrateur (orchestrator.py) gère actuellement le flux entre les couches.
-
-Bilal peut intégrer ses propres scripts de nettoyage plus complexes dans la boucle de l'orchestrateur ou proposer une migration vers Apache Airflow.
+1. Architecture Médaillon (Data Lakehouse)
+L'implémentation repose sur trois couches logiques pour garantir la qualité des données:
 
 
+Bronze (/lakehouse/bronze) : Stockage immuable des données brutes extraites de Kafka au format JSON.
+
+Silver (/lakehouse/silver) : Données nettoyées, typées et historisées. Nous utilisons ici le format Delta Lake pour permettre des transactions ACID et une meilleure fiabilité que le simple Parquet.
+
+
+Gold (/lakehouse/gold) : Agrégations métier prêtes pour l'analyse (ex: daily_stats.parquet). C'est cette couche qui alimente les tableaux de bord du Membre 4.
+
+2. Technologies de Transformation & Stockage
+
+Apache Spark 3.5.1 : Utilisé comme moteur de calcul principal pour les transformations lourdes entre les couches.
+
+
+Delta Lake : Pour la gestion de la couche Silver, permettant le "time travel" et l'intégrité des données.
+
+
+TimescaleDB : Base de données relationnelle (PostgreSQL 15) utilisée pour le monitoring en temps réel.
+
+
+Parquet : Format de stockage colonnaire utilisé dans la couche Gold pour optimiser les requêtes analytiques.
+
+3. Pipeline d'Automatisation (Orchestration)
+Un orchestrateur central (orchestrateur.py) pilote l'ensemble du flux de données:
+
+Il surveille l'arrivée des nouveaux fichiers JSON en Bronze.
+
+Il déclenche automatiquement le job Spark job_silver_delta.py pour alimenter la couche Silver.
+
+Il finalise le cycle en mettant à jour les statistiques dans la couche Gold.
+
+Guide d'exécution 
+Pour lancer le pipeline de transformation et l'automatisation du Lakehouse, suivez cet ordre précis :
+# 1. Se positionner dans le dossier docker
+cd docker
+
+# 2. Lancer l'infrastructure
+docker compose up -d
+
+# 3. Lancer le Bridge (Capture Kafka -> Bronze JSON)
+# Note : On l'exécute DANS le conteneur pour garantir la connexion à TimescaleDB
+docker compose exec analytics-engine python bridge_consumer.py
+
+# 4. Lancer l'Orchestrateur (Transformation Bronze -> Silver -> Gold)
+# Ouvrez un NOUVEAU terminal et lancez le pilotage Spark :
+python orchestrateur.py

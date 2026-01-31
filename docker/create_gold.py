@@ -1,34 +1,37 @@
 import pandas as pd
 import os
+import glob
 
-# Chemins
-SILVER_PATH = "../lakehouse/silver/"
-GOLD_PATH = "../lakehouse/gold/"
+SILVER_PATH = "lakehouse/silver/"
+GOLD_PATH = "lakehouse/gold/"
 
-if not os.path.exists(GOLD_PATH):
-    os.makedirs(GOLD_PATH)
+os.makedirs(GOLD_PATH, exist_ok=True)
 
-print("🏆 Génération de la Couche Gold (Indicateurs Business)...")
+def run_gold():
+    print("🏆 Transformation Silver ➡️ Gold...")
 
-# 1. Lire tous les fichiers Parquet de la couche Silver
-all_files = [os.path.join(SILVER_PATH, f) for f in os.listdir(SILVER_PATH) if f.endswith('.parquet')]
-df_list = [pd.read_parquet(f) for f in all_files]
-df_silver = pd.concat(df_list)
+    parquet_files = glob.glob(os.path.join(SILVER_PATH, "*.parquet"))
+    
+    if not parquet_files:
+        print("⚠️ Silver vide.")
+        return
 
-# 2. Transformation : Agrégation par jour
-# On extrait la date (jour) du timestamp
-df_silver['day'] = df_silver['timestamp'].dt.date
+    df_list = [pd.read_parquet(f) for f in parquet_files]
+    df = pd.concat(df_list, ignore_index=True)
 
-gold_df = df_silver.groupby('day').agg({
-    'power_kw': ['mean', 'min', 'max', 'sum'],
-    'meter_id': 'first'
-}).reset_index()
+    # Agrégation par JOUR
+    df['date'] = df['timestamp'].dt.date
+    
+    df_gold = df.groupby(['date', 'region']).agg(
+        avg_power=('power_kw', 'mean'),
+        max_power=('power_kw', 'max'),
+        total_records=('power_kw', 'count')
+    ).reset_index()
 
-# Renommer les colonnes pour que ce soit plus clair
-gold_df.columns = ['date', 'avg_power', 'min_power', 'max_power', 'total_consumption', 'country']
+    output_file = os.path.join(GOLD_PATH, "daily_stats.parquet")
+    df_gold.to_parquet(output_file, index=False)
+    
+    print(f"✅ Gold mis à jour : {len(df_gold)} lignes.")
 
-# 3. Sauvegarde
-gold_df.to_parquet(os.path.join(GOLD_PATH, "daily_energy_stats.parquet"), index=False)
-
-print(f"✅ Couche Gold terminée ! Fichier généré : {os.path.join(GOLD_PATH, 'daily_energy_stats.parquet')}")
-print(gold_df.head()) # Affiche les premières lignes pour vérifier
+if __name__ == "__main__":
+    run_gold()
