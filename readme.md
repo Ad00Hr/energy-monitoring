@@ -6,6 +6,7 @@ Cette partie du projet consiste à **ingérer les données de consommation élec
 
 ---
 
+
 ## Technologies Utilisées
 
 - **Python 3.11** : producteur Kafka  
@@ -57,3 +58,29 @@ kafka-console-consumer --bootstrap-server kafka:29092 --topic energy_raw --from-
 
 # Stopper tous les conteneurs Docker
 docker compose down
+```
+Architecture de Stockage & Lakehouse (Guide pour Membre 3)
+Cette section détaille l'infrastructure mise en place pour la persistance et la transformation des données.
+
+1. Couches du Data Lakehouse (Médaillon)
+Le Membre 3 doit utiliser les répertoires suivants pour ses scripts de transformation (Spark/dbt) :
+
+Bronze (/lakehouse/bronze) : Contient les données brutes extraites de Kafka au format JSON. C'est la source de vérité immuable.
+
+Silver (/lakehouse/silver) : Contient les données nettoyées et typées au format Parquet. Les doublons sont supprimés et les timestamps sont formatés.
+
+Gold (/lakehouse/gold) : Contient les agrégations métier (ex: daily_energy_stats.parquet). C'est la source directe pour les dashboards du Membre 4.
+
+2. Base de Données Temps Réel (TimescaleDB)
+Pour les besoins de monitoring instantané, une base de données TimescaleDB (PostgreSQL 15) est disponible.
+
+Connexion : host: localhost, port: 5432, user: admin, password: password123.
+
+Table principale : energy_data (Hypertable partitionnée par le temps sur la colonne time).
+
+3. Pipeline d'Automatisation
+Un orchestrateur (orchestrator.py) gère actuellement le flux entre les couches.
+
+Le Membre 3 peut intégrer ses propres scripts de nettoyage plus complexes dans la boucle de l'orchestrateur ou proposer une migration vers Apache Airflow.
+
+
