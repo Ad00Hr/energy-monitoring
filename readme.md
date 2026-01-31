@@ -65,7 +65,7 @@ docker compose down
 ## Cette section détaille l'infrastructure mise en place pour la persistance et la transformation des données.
 
 ## 1. Couches du Data Lakehouse (Médaillon)
-Le Membre 3 doit utiliser les répertoires suivants pour ses scripts de transformation (Spark/dbt) :
+Bilal doit utiliser les répertoires suivants pour ses scripts de transformation (Spark/dbt) :
 
 Bronze (/lakehouse/bronze) : Contient les données brutes extraites de Kafka au format JSON. C'est la source de vérité immuable.
 
@@ -83,6 +83,6 @@ Table principale : energy_data (Hypertable partitionnée par le temps sur la col
 ## 3. Pipeline d'Automatisation
 Un orchestrateur (orchestrator.py) gère actuellement le flux entre les couches.
 
-Le Membre 3 peut intégrer ses propres scripts de nettoyage plus complexes dans la boucle de l'orchestrateur ou proposer une migration vers Apache Airflow.
+Bilal peut intégrer ses propres scripts de nettoyage plus complexes dans la boucle de l'orchestrateur ou proposer une migration vers Apache Airflow.
 
 
