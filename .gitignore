@@ -1,20 +1,30 @@
-# Données CSV brutes
-data/*.csv
-
-# Fichiers Python compilés
-__pycache__/
-*.pyc
-*.pyo
-
-# Logs
-*.log
-
-# Environnements virtuels
-venv/
-.venv/
-env/
-
-# Docker volumes / données locales
+# --- DONNÉES BRUTES (INGESTION) ---
+*.csv
+*.zip
+data/
 docker/producer-energy/data/
-# Ignore CSV dataset
-docker/producer-energy/data/*.csv
+
+# --- INFRASTRUCTURE DOCKER ---
+# Très important : ne pas pusher les données de la DB
+docker/timescaledb_data/
+# Si tu as des données Kafka persistantes localement
+docker/kafka_data/
+docker/zookeeper_data/
+
+# --- ARCHITECTURE MÉDAILLON (LAKEHOUSE) ---
+# On ignore les fichiers de données mais on garde la structure
+lakehouse/bronze/*.json
+lakehouse/silver/*.parquet
+lakehouse/gold/*.parquet
+# On autorise uniquement le fichier .gitkeep pour garder les dossiers sur GitHub
+!lakehouse/**/.gitkeep
+
+# --- PYTHON & SYSTÈME ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+.vscode/
+*.log
