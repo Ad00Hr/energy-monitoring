@@ -76,15 +76,14 @@ services:
       - DB_USER=admin
       - DB_PASSWORD=password123
 
-  # --- IMAGE OFFICIELLE APACHE ---
   spark-master:
     image: apache/spark:3.5.1
     container_name: spark-master
-    user: root # Important pour éviter les erreurs de permission Windows
+    user: root
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     ports:
-      - '8090:8080' # Interface Web
-      - '7077:7077' # Port de connexion
+      - '8090:8080'
+      - '7077:7077'
     volumes:
       - ../lakehouse:/lakehouse
       - .:/app
@@ -99,6 +98,16 @@ services:
       - .:/app
     depends_on:
       - spark-master
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - timescaledb
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
 
 volumes:
   timescaledb_data:

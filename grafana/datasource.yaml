@@ -1,0 +1,11 @@
+apiVersion: 1
+datasources:
+  - name: PostgreSQL
+    type: postgres
+    url: timescaledb:5432
+    user: admin
+    password: password123
+    database: energy_db
+    jsonData:
+      sslmode: 'disable'
+      postgresVersion: 1500
